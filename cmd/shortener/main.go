@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"os"
+	"shortener/logger"
+)
 
 func main() {
-	fmt.Println("Hello, world!")
+	logger.SetLogger(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+	logger.Info.Println("Hello, world!")
 }
