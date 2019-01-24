@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/lll-phill-lll/shortener/logger"
 	"os"
-	"shortener/logger"
 )
 
 func main() {
