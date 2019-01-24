@@ -1,2 +1,2 @@
 ## SHORTENER
-Microservice that shortens links
+Microservice that shortens link
