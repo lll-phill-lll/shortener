@@ -70,8 +70,9 @@ func Short(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h := RandStringBytesMaskImprSrc(4)
-	storage.DB[h] = req.Url
-	_, err = fmt.Fprintln(w, "http://localhost:8080/"+h)
+	storage.DB[h] = req.URL
+	toDend, _ := json.Marshal(api.Response{"http://localhost:8080" + h})
+	_, err = fmt.Fprintln(w, toDend)
 	if err != nil {
 		logger.Error.Println(err)
 	}
