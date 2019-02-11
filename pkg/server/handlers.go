@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lll-phill-lll/shortener/api"
 	"github.com/lll-phill-lll/shortener/logger"
-	"github.com/lll-phill-lll/shortener/pkg/storage"
+	"github.com/lll-phill-lll/shortener/pkg/task"
 	"math/rand"
 	"net/http"
 	"time"
@@ -41,20 +41,21 @@ func RandStringBytesMaskImprSrc(n int) string {
 	return string(b)
 }
 
-func (serv Impl)Hash(w http.ResponseWriter, r *http.Request) {
+func (serv Impl) hash(w http.ResponseWriter, r *http.Request) {
 	u := mux.Vars(r)
-	serv.DB.Load()
-	url, in := storage.DB[u["hash"]]
-	if in {
-		http.Redirect(w, r, url, http.StatusSeeOther)
-
-	} else {
+	hash := u["hash"]
+	task, err := serv.DB.Load(hash)
+	logger.Info.Println(r.URL.Path)
+	if err != nil {
 		_, err := fmt.Fprintln(w, "Not found")
 		logger.Error.Println(err)
+
+	} else {
+		http.Redirect(w, r, task.GetHashedURL(), http.StatusSeeOther)
 	}
 }
 
-func (serv Impl)Short(w http.ResponseWriter, r *http.Request) {
+func (serv Impl) short(w http.ResponseWriter, r *http.Request) {
 	logger.Debug.Println("short")
 	if r.Method != "POST" {
 		_, err := fmt.Fprintln(w, "Should be post")
@@ -71,8 +72,12 @@ func (serv Impl)Short(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h := RandStringBytesMaskImprSrc(4)
-	storage.DB[h] = req.URL
-	toDend, _ := json.Marshal(api.Response{"http://localhost:8080" + h})
+	task := task.Task{URL: req.URL, Hash: h, HostURL: serv.HostURL}
+	err = serv.DB.Save(task)
+	if err != nil {
+		logger.Error.Println(err.Error())
+	}
+	toDend, _ := json.Marshal(api.Response{HashedURL: task.GetHashedURL()})
 	_, err = fmt.Fprintln(w, toDend)
 	if err != nil {
 		logger.Error.Println(err)

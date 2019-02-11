@@ -6,6 +6,7 @@ import (
 )
 
 type App struct {
-	DB storage.DataBase
+	DB     storage.DataBase
 	Server server.Impl
+	HostURL string
 }

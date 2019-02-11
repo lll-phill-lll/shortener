@@ -14,7 +14,6 @@ type DataBase interface {
 	Init() error
 }
 
-
 const (
 	host     = "localhost"
 	port     = 5432
@@ -24,12 +23,12 @@ const (
 )
 
 type PostgresDB struct {
-	DB *sql.DB
+	DB   *sql.DB
 	Name string
 }
 
-func (pdb PostgresDB)createStatementForDBInitialization() string {
-	statement := "CREATE TABLE IF NOT EXISTS links (hash, link, PRIMARY KEY (hash))"
+func (pdb PostgresDB) createStatementForDBInitialization() string {
+	statement := "CREATE TABLE IF NOT EXISTS links (hash varchar PRIMARY KEY, link varchar)"
 	return statement
 }
 
@@ -55,7 +54,7 @@ func (pdb PostgresDB) Init() error {
 
 func (pdb PostgresDB) Save(task task.Task) error {
 	err := WithTransaction(pdb.DB, func(tx Transaction) error {
-		res, err := tx.Exec("INSERT INTO links(hash, link) VALUES($1, $2)", task.HashedURL, task.URL)
+		res, err := tx.Exec("INSERT INTO links(hash, link) VALUES($1, $2)", task.Hash, task.URL)
 		if err != nil {
 			return err
 		}
@@ -89,5 +88,5 @@ func (pdb PostgresDB) Load(hash string) (task.Task, error) {
 	if err != nil {
 		return task.Task{}, err
 	}
-	return task.Task{HashedURL:hash, URL:URL}, nil
+	return task.Task{Hash: hash, URL: URL}, nil
 }

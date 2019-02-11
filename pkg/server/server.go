@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 	"github.com/lll-phill-lll/shortener/pkg/storage"
 	"net/http"
 	"strconv"
@@ -13,14 +14,15 @@ type Server interface {
 }
 
 type Impl struct {
-	DB storage.DataBase
+	DB     storage.DataBase
 	router *mux.Router
+	HostURL string
 }
 
 func (serv Impl) SetHandlers() {
 	r := mux.NewRouter()
-	r.HandleFunc("/short", Short).Methods("POST")
-	r.HandleFunc("/{hash}", Hash).Methods("GET")
+	r.HandleFunc("/short", serv.short).Methods("POST")
+	r.HandleFunc("/{hash}", serv.hash).Methods("GET")
 	http.Handle("/", r)
 	serv.router = r
 

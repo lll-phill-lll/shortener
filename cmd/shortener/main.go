@@ -8,12 +8,10 @@ import (
 	"os"
 )
 
-
-
 func GetApp() application.App {
 	logger.SetLogger(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
-	db := &storage.PostgresDB{Name:"links"}
-	return application.App{DB: db, Server: server.Impl{DB: db}}
+	db := &storage.PostgresDB{Name: "links"}
+	return application.App{DB: db, Server: server.Impl{DB: db, HostURL: "http://localhost:8080"}}
 }
 
 func main() {
@@ -31,4 +29,3 @@ func main() {
 		logger.Error.Println("Can't start serving", err.Error())
 	}
 }
-
