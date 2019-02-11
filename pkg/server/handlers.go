@@ -41,8 +41,9 @@ func RandStringBytesMaskImprSrc(n int) string {
 	return string(b)
 }
 
-func Hash(w http.ResponseWriter, r *http.Request) {
+func (serv Impl)Hash(w http.ResponseWriter, r *http.Request) {
 	u := mux.Vars(r)
+	serv.DB.Load()
 	url, in := storage.DB[u["hash"]]
 	if in {
 		http.Redirect(w, r, url, http.StatusSeeOther)
@@ -53,7 +54,7 @@ func Hash(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Short(w http.ResponseWriter, r *http.Request) {
+func (serv Impl)Short(w http.ResponseWriter, r *http.Request) {
 	logger.Debug.Println("short")
 	if r.Method != "POST" {
 		_, err := fmt.Fprintln(w, "Should be post")

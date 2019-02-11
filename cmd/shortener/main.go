@@ -1,51 +1,34 @@
-/*package main
-
-import (
-	"github.com/gorilla/mux"
-	"github.com/lll-phill-lll/shortener/logger"
-	"github.com/lll-phill-lll/shortener/pkg/server"
-	"net/http"
-	"os"
-)
-
-func InitApp() {
-	logger.SetLogger(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
-}
-
-func main() {
-	InitApp()
-	r := mux.NewRouter()
-	r.HandleFunc("/short", server.Short).Methods("POST")
-	r.HandleFunc("/{hash}", server.Hash).Methods("GET")
-	http.Handle("/", r)
-
-	logger.Info.Println("Start Listening on port 8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		logger.Error.Println(err.Error())
-	}
-}*/
-
 package main
 
 import (
-	"fmt"
-	_ "github.com/lib/pq"
+	"github.com/lll-phill-lll/shortener/logger"
+	"github.com/lll-phill-lll/shortener/pkg/application"
+	"github.com/lll-phill-lll/shortener/pkg/server"
+	"github.com/lll-phill-lll/shortener/pkg/storage"
+	"os"
 )
 
 
+
+func GetApp() application.App {
+	logger.SetLogger(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+	db := &storage.PostgresDB{Name:"links"}
+	return application.App{DB: db, Server: server.Impl{DB: db}}
+}
+
 func main() {
-
-// 	connStr := "user=admin password=admin dbname=localhost:5432/shortener sslmode=disable"
-	// connStr := "postgres://admin:admin@localhost:15432/shortener?sslmode=disable"
-
-
-	result, err := db.Query("SELECT * FROM Links")
+	app := GetApp()
+	err := app.DB.Init()
 	if err != nil {
-		panic(err)
+		logger.Error.Println(err.Error())
+		os.Exit(1)
 	}
-	var hash, link string
-	for result.Next() {
-		result.Scan(&hash, &link)
-		fmt.Println(hash, link)
+	app.Server.SetHandlers()
+
+	logger.Info.Println("Start Listening on port 8080")
+	err = app.Server.StartServe(8080)
+	if err != nil {
+		logger.Error.Println("Can't start serving", err.Error())
 	}
 }
+
