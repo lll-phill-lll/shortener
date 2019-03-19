@@ -19,7 +19,7 @@ type Impl struct {
 	HostURL string
 }
 
-func (serv Impl) SetHandlers() {
+func (serv *Impl) SetHandlers() {
 	r := mux.NewRouter()
 	r.HandleFunc("/short", serv.short).Methods("POST")
 	r.HandleFunc("/{hash}", serv.hash).Methods("GET")
@@ -28,7 +28,7 @@ func (serv Impl) SetHandlers() {
 
 }
 
-func (serv Impl) StartServe(port int) error {
+func (serv *Impl) StartServe(port int) error {
 	portStr := strconv.Itoa(port)
 	portStr = ":" + portStr
 
