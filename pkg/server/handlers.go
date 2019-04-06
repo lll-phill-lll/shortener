@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/lll-phill-lll/shortener/api"
 	"github.com/lll-phill-lll/shortener/logger"
 	"github.com/lll-phill-lll/shortener/pkg/task"
@@ -74,11 +75,36 @@ func (serv *Impl) short(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h := RandStringBytesMaskImprSrc(4)
-	task := task.Task{URL: req.URL, Hash: h, HostURL: serv.HostURL}
-	err = serv.DB.Save(task)
-	if err != nil {
-		logger.Error.Println(err.Error())
+	var task task.Task
+	n := 4
+	retriesWithCurrentHashLength := 3
+	retriesIncreasingLength := 3
+	for {
+		h := RandStringBytesMaskImprSrc(n)
+		task.URL = req.URL
+		task.Hash = h
+		task.HostURL = serv.HostURL
+		err = serv.DB.Save(task)
+		if err != nil {
+			if err.(*pq.Error).Code == "23505" {
+				if retriesWithCurrentHashLength > 0 {
+					logger.Info.Println("already exists retry with hash length", n)
+					retriesWithCurrentHashLength--
+				} else if retriesIncreasingLength > 0 {
+					n++
+					logger.Info.Println("already exists retry with hash length", n)
+					retriesIncreasingLength--
+					retriesWithCurrentHashLength = 3
+				} else {
+					logger.Error.Println("Can't save url")
+					break
+				}
+			} else {
+				logger.Error.Println("Can't save url")
+			}
+		} else {
+			break
+		}
 	}
 	toDend, _ := json.Marshal(api.Response{HashedURL: task.GetHashedURL()})
 	_, err = fmt.Fprintln(w, string(toDend))

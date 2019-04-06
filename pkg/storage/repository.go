@@ -28,7 +28,7 @@ type PostgresDB struct {
 }
 
 func (pdb *PostgresDB) createStatementForDBInitialization() string {
-	statement := "CREATE TABLE IF NOT EXISTS links (hash varchar PRIMARY KEY, link varchar)"
+	statement := "CREATE TABLE IF NOT EXISTS links (hash varchar PRIMARY KEY, link varchar UNIQUE)"
 	return statement
 }
 
